@@ -1,7 +1,7 @@
 import random
 import traceback
 
-batch_mult = 1  # 7
+batch_mult = 20  # 7
 
 action_noise = 0.05
 action_noise_schedule = 0.025

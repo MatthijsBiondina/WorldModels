@@ -1,46 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="e3835d98-97e1-4adf-b2e9-3ec873d916b5" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/../gradient/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../gradient/.idea/deployment.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../gradient/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../gradient/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../gradient/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../gradient/.idea/other.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../gradient/.idea/planet.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../gradient/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../gradient/src/models/policy/policy_model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../gradient/src/utils/plotting.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../imitation/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../imitation/.idea/deployment.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../imitation/.idea/imitation.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../imitation/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../imitation/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../imitation/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../imitation/.idea/other.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../imitation/.idea/remote-mappings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../imitation/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../imitation/res/memory/actions.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../imitation/res/memory/attributes.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../imitation/res/memory/masks.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../imitation/res/memory/observations.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../imitation/res/memory/rewards.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/deployment.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/training/trainer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/utils/startup.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/planet.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/planet.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/memory.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/memory.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/environments/init_environment.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/environments/init_environment.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/planner/cem_planner.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/planner/cem_planner.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/worldmodel/world_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/worldmodel/world_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/tools.py" afterDir="false" />
-    </list>
+    <list default="true" id="e3835d98-97e1-4adf-b2e9-3ec873d916b5" name="Default Changelist" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
