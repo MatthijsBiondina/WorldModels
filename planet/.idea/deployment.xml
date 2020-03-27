@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="mbiondina@paard:22">
+    <serverData>
+      <paths name="mbiondina@paard:22">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/mbiondina/WorldModels/planet" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="mbiondina@paard:22 (1)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/mbiondina/WorldModels/planet" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>
