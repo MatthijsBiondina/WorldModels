@@ -31,8 +31,11 @@ def init_seeds():
 
 def init_logging():
     ii = 0
-    while ii in [int(x.split('__')[1]) for x in os.listdir('res/results')]:
-        ii += 1
+    try:
+        while ii in [int(x.split('__')[1]) for x in os.listdir('res/results')]:
+            ii += 1
+    except FileNotFoundError:
+        pass
     save_loc = os.path.join('res/results', '__'.join((cfg.id, str(ii).zfill(2),
                             datetime.now().strftime("%Y_%m_%d__%H_%M_%S"))))
     if os.path.exists(save_loc):
