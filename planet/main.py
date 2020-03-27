@@ -12,7 +12,7 @@ import src.utils.config as cfg
 
 
 mem_load = None # './res/memory'
-os.environ['CUDA_VISIBLE_DEVICES'] = "0,1"
+os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 ###
 
 init_printoptions()

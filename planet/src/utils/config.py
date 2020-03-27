@@ -1,10 +1,10 @@
 import traceback
 
-batch_mult = 15
+batch_mult = 1
 
 action_noise = 0.05
 action_noise_schedule = 0.025
-action_repeat = 4
+action_repeat = 2
 action_delay = 0.02
 activation_function = 'relu'
 adam_epsilon = 1e-4
