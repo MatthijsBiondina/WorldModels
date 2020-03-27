@@ -24,6 +24,7 @@ class Trainer:
         self.param_list = list(self.wm.parameters())
         self.optimizer = optim.Adam(self.param_list, lr=0 if cfg.learning_rate_schedule != 0 else cfg.learning_rate,
                                     eps=cfg.adam_epsilon)
+        self.action_noise = cfg.action_noise if cfg.action_noise_schedule == 0 else 1.
 
     def collect_interval(self, metrics: dict, D: ExperienceReplay, epoch: int):
         self.wm.eval()
@@ -38,7 +39,7 @@ class Trainer:
                                                            self.wm.e_model(o.unsqueeze(dim=0)).unsqueeze(dim=0))
                 b, s_post = b.squeeze(dim=1), s_post.squeeze(dim=1)  # remove time dimension
 
-                a = self.planner(b, s_post) + cfg.action_noise * torch.randn_like(a)
+                a = self.planner(b, s_post) + self.action_noise * torch.randn_like(a)
 
                 o_, r, done = self.env.step(a.view(self.env.action_size).numpy())
 
@@ -48,6 +49,8 @@ class Trainer:
                 o = torch.tensor(o_, dtype=torch.float32)
                 if done:
                     break
+        if cfg.action_noise_schedule != 0:
+            self._linearly_ramping_an()
         metrics['steps'].append(t if len(metrics['steps']) == 0 else t + metrics['steps'][-1])
         metrics['episodes'].append(epoch)
         metrics['rewards'].append(r_tot)
@@ -183,10 +186,14 @@ class Trainer:
 
         loss = (kl_divergence(Normal(MU_pos.cuda(), STD_pos.cuda()), Normal(MU_pri, STD_pri)) * seq_masks.cuda()).sum(2)
         loss = torch.max(loss, free_nats).mean()
-        loss = (1 / cfg.overshooting_distance) * cfg.overshooting_kl_beta * (cfg.chunk_size - 1) * loss
-        aa = time.time() - t0
+        return loss * cfg.overshooting_kl_beta
+        # loss = (1 / cfg.overshooting_distance) * cfg.overshooting_kl_beta * (cfg.chunk_size - 1) * loss
+        # aa = time.time() - t0
+        #
+        # return loss
 
-        return loss
+    def _linearly_ramping_an(self):
+        self.action_noise = max(self.action_noise - cfg.action_noise_schedule, cfg.action_noise)
 
     def _linearly_ramping_lr(self):
         for group in self.optimizer.param_groups:

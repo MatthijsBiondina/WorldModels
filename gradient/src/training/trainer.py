@@ -16,6 +16,11 @@ from src.models.worldmodel.world_model import WorldModel, bottle
 from src.utils.tools import poem, pyout, make_video
 
 
+def _linearly_ramping_lr(optimizer, learning_rate):
+    for group in optimizer.param_groups:
+        group['lr'] = min(group['lr'] + learning_rate * cfg.learning_rate_schedule, learning_rate)
+
+
 class Trainer:
     def __init__(self, environment: Environment, world_model: WorldModel, planner: nn.Module, policy: nn.Module):
         self.env = environment
@@ -27,7 +32,7 @@ class Trainer:
                                          lr=0 if cfg.learning_rate_schedule != 0 else cfg.learning_rate,
                                          eps=cfg.adam_epsilon)
         self.plcy_optimizer = optim.Adam(self.policy.parameters(),
-                                         lr=0 if cfg.learning_rate_schedule != 0 else cfg.learning_rate,
+                                         lr=0 if cfg.learning_rate_schedule != 0 else cfg.learning_rate_plcy,
                                          eps=cfg.adam_epsilon)
         self.action_noise = cfg.action_noise if cfg.action_noise_schedule == 0 else 1.
 
@@ -114,7 +119,7 @@ class Trainer:
                 kl_loss += self._latent_overshooting(Y, A, M, free_nats)
 
             if cfg.learning_rate_schedule != 0:
-                self._linearly_ramping_lr(self.worm_optimizer)
+                _linearly_ramping_lr(self.worm_optimizer, cfg.learning_rate)
 
             self.worm_optimizer.zero_grad()
             (o_loss + r_loss + kl_loss).backward()
@@ -156,11 +161,11 @@ class Trainer:
             loss = - self.wm.r_model(torch.cat(B, dim=0), torch.cat(S, dim=0)).mean()
 
             if cfg.learning_rate_schedule != 0:
-                self._linearly_ramping_lr(self.plcy_optimizer)
+                _linearly_ramping_lr(self.plcy_optimizer, cfg.learning_rate_plcy)
 
             self.plcy_optimizer.zero_grad()
             loss.backward()
-            self.plcy_optimizer.step() #S
+            self.plcy_optimizer.step()  # S
 
             losses.append(loss.item())
         metrics['p_loss'].append(mean(losses))
@@ -187,7 +192,7 @@ class Trainer:
                 F.pad(M_[:, t:d], seq_pad),
                 B_[:, t_],
                 S_pri_[:, t_],
-                F.pad(MU_pos_[:, t_ + 1: d_ + 1].detach(), seq_pad),
+                F.pad(MU_pos_[:, t_ + 1: d_ + 1].detach(), seq_pad),  # stop gradients posterior distributions
                 F.pad(STD_pos_[:, t_ + 1:d_ + 1].detach(), seq_pad, value=1),
                 F.pad(torch.ones(B_.size(0), d - t, cfg.state_size).cuda(), seq_pad)
             ))
@@ -205,7 +210,8 @@ class Trainer:
 
         loss = (kl_divergence(Normal(MU_pos, STD_pos), Normal(MU_pri, STD_pri)) * seq_masks).sum(2)
         loss = torch.max(loss, free_nats).mean()
-        loss = (1 / cfg.overshooting_distance) * cfg.overshooting_kl_beta * (cfg.chunk_size - 1) * loss
+        return loss * cfg.overshooting_kl_beta
+        # loss = (1 / cfg.overshooting_distance) * cfg.overshooting_kl_beta * (cfg.chunk_size - 1) * loss
 
         return loss
 
@@ -245,7 +251,3 @@ class Trainer:
 
     def _linearly_ramping_an(self):
         self.action_noise = max(self.action_noise - cfg.action_noise_schedule, cfg.action_noise)
-
-    def _linearly_ramping_lr(self, optimizer):
-        for group in optimizer.param_groups:
-            group['lr'] = min(group['lr'] + cfg.learning_rate * cfg.learning_rate_schedule, cfg.learning_rate)

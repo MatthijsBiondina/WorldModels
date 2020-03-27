@@ -1,31 +1,33 @@
 import traceback
 
+batch_mult = 15
+
 action_noise = 0.05
-action_noise_schedule = 0.1
+action_noise_schedule = 0.025
 action_repeat = 4
 action_delay = 0.02
 activation_function = 'relu'
 adam_epsilon = 1e-4
-batch_size = 50  # <-----------------------------------------------
+batch_size = 50 * batch_mult  # <-----------------------------------------------
 belief_size = 200
 bit_depth = 5
 candidates = 1000
 checkpoint_experience = False
 checkpoint_interval = 1
 chunk_size = 50
-collect_interval = 100 # <----------------------------------------
+collect_interval = 100 // batch_mult # <----------------------------------------
 disable_cuda = False
 embedding_size = 100
 env_name = 'InvertedPendulumSwingupPyBulletEnv-v0'
 episodes = 1000
 experience_replay = ''
 experience_size = 1000000
-free_nats = 3
+free_nats = 2.
 global_kl_beta = 0.1
 grad_clip_norm = 1.
 hidden_size = 200
 id = 'vanilla'
-learning_rate = 1e-3 # <------------------------------------------
+learning_rate = 1e-3 / batch_mult # <------------------------------------------
 learning_rate_schedule = 0.1
 max_episode_length = 1000
 min_std_dev = 1e-1

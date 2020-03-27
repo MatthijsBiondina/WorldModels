@@ -1,7 +1,7 @@
 import random
 import traceback
 
-batch_mult = 20  # 7
+batch_mult = 1  # 7
 
 action_noise = 0.05
 action_noise_schedule = 0.025
@@ -20,7 +20,7 @@ collect_interval = 100 // batch_mult  # <---------------------------------------
 disable_cuda = False
 embedding_size = 100
 env_name = 'InvertedPendulumSwingupPyBulletEnv-v0'
-episodes = 100
+episodes = 1000
 experience_replay = ''
 experience_size = 1000000
 free_nats = 1.
@@ -29,13 +29,14 @@ grad_clip_norm = 1.
 hidden_size = 200
 id = 'gradient'
 learning_rate = 1e-3 / batch_mult  # <------------------------------------------
+learning_rate_plcy = 1e-4 / batch_mult
 learning_rate_schedule = 0.1
 max_episode_length = 1000
 min_std_dev = 1e-1
 models = ''
 optimisation_iters = 10  # <- debug speedup
 overshooting_distance = 24
-overshooting_kl_beta = 0.05
+overshooting_kl_beta = 1.
 overshooting_reward_scale = 0
 planning_horizon = 12
 render = False
