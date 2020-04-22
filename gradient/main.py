@@ -11,7 +11,8 @@ import src.utils.config as cfg
 ### dev
 
 mem_load = None # './res/memory'
-os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
+os.environ['CUDA_VISIBLE_DEVICES'] = "2"
 ###
 
 init_printoptions()
