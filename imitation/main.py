@@ -1,15 +1,16 @@
 import os
-import torch
+
+from src.utils.plotting import save_metrics
 from src.utils.startup import init_printoptions, init_seeds, init_logging, init_environment, init_memory, init_models, \
     init_trainer, init_seed_episodes, init_hyperparameters
 import src.utils.config as cfg
 
 # {k:tuple(f.size()) for k,f in sorted(locals().items()) if type(f).__name__ == 'Tensor'}
 ### dev
-from src.utils.tools import save_metrics
 
-mem_load = './res/memory'
-os.environ['CUDA_VISIBLE_DEVICES'] = "2"
+# mem_load = './res/memory'
+mem_load = None
+os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 ###
 
 init_printoptions()
@@ -36,12 +37,5 @@ while epoch < cfg.episodes:
     save_metrics(metrics, save_loc)
     epoch += 1
 
-# D = init_memory()
-#
-# for ii in range(10):
-#     D.push(torch.tensor([ii, ii+0.1, ii+0.2, ii+0.3]), torch.tensor([ii]), ii, ii == 5)
-#
-#
-# O, A, R, M = D.sample()
 
 print("bye " * 2)

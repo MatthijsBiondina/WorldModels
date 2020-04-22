@@ -31,11 +31,14 @@ class Planner(nn.Module):
 
         for _ in range(cfg.optimisation_iters):
             # Evaluate J action sequences from the current belief
-            A = torch.clamp(MU_a + STD_a * torch.randn(minibs, cfg.candidates, cfg.planning_horizon, self.action_size),
-                            -1., 1.).view(minibs * cfg.candidates, cfg.planning_horizon, self.action_size)
+            # A = torch.clamp(MU_a + STD_a * torch.randn(minibs, cfg.candidates, cfg.planning_horizon, self.action_size),
+            #                 -1., 1.).view(minibs * cfg.candidates, cfg.planning_horizon, self.action_size)
+
+            A = (MU_a + STD_a * torch.randn(minibs, cfg.candidates, cfg.planning_horizon, self.action_size))
+            A = A.view(minibs * cfg.candidates, cfg.planning_horizon, self.action_size)
 
             # Sample next state predictions
-            B, S, _, _ = self.worldmodel.t_model(s, A, b)
+            B, S, _, _ = self.worldmodel.t_model(s, torch.clamp(A, -1., 1.), b)
 
             # Calculate expected returns
             R: Tensor = self.worldmodel.r_model(B.view(-1, cfg.belief_size), S.view(-1, cfg.state_size)
@@ -49,4 +52,4 @@ class Planner(nn.Module):
             MU_a = A_top.mean(dim=1, keepdim=True)
             STD_a = A_top.std(dim=1, unbiased=False, keepdim=True)
 
-        return MU_a[:, :, 0].squeeze(dim=1)
+        return torch.clamp(MU_a[:, :, 0].squeeze(dim=1), -1., 1.)

@@ -22,6 +22,7 @@ class SimEnv(Environment):
         super().__init__(save_loc)
         self.env = gym.make(cfg.env_name)
         self.t = 0
+        self.actions = [np.zeros(self.action_size)] * cfg.latency
 
     def reset(self):
         """
@@ -30,6 +31,7 @@ class SimEnv(Environment):
         :return: observation at t=0
         """
         self.t = 0
+        self.actions = [np.zeros(self.action_size)] * cfg.latency
         return preprocess_observation(self.env.reset())
 
     def step(self, action: np.ndarray):
@@ -41,12 +43,14 @@ class SimEnv(Environment):
         """
         obs, done = None, None
         reward = 0
+        self.actions.append(action)
         for k in range(cfg.action_repeat):
-            obs, reward_k, done, _ = self.env.step(action)
+            obs, reward_k, done, _ = self.env.step(self.actions[0])
             reward += reward_k
             done = done or self.t == cfg.max_episode_length
             if done:
                 break
+        self.actions.pop(0)
         return preprocess_observation(obs), reward, done
 
     def render(self) -> np.ndarray:

@@ -1,3 +1,6 @@
+from copy import deepcopy
+
+import random
 import time
 from math import ceil
 from statistics import mean
@@ -14,7 +17,7 @@ from src.data.memory import ExperienceReplay
 
 from src.environments.general.environment_template import Environment
 from src.models.worldmodel.world_model import WorldModel, bottle
-from src.utils.tools import poem, pyout, make_video
+from src.utils.tools import poem, pyout, make_video, chunks, soft_update
 
 
 class Trainer:
@@ -29,10 +32,12 @@ class Trainer:
         self.plcy_optimizer = optim.Adam(self.policy.parameters(),
                                          lr=0 if cfg.learning_rate_schedule != 0 else cfg.learning_rate,
                                          eps=cfg.adam_epsilon)
+        self.action_noise = cfg.action_noise if cfg.action_noise_schedule == 0 else 1.
 
     def collect_interval(self, metrics: dict, D: ExperienceReplay, epoch: int):
         self.wm.eval()
         self.planner.eval()
+        self.policy.eval()
         with torch.no_grad():
             o, r_tot = torch.tensor(self.env.reset(), dtype=torch.float32), 0
             b, s_post = torch.zeros(1, cfg.belief_size), torch.zeros(1, cfg.state_size)
@@ -43,7 +48,7 @@ class Trainer:
                                                            self.wm.e_model(o.unsqueeze(dim=0)).unsqueeze(dim=0))
                 b, s_post = b.squeeze(dim=1), s_post.squeeze(dim=1)  # remove time dimension
 
-                a = torch.clamp(self.policy(b, s_post).cpu() + cfg.action_noise * torch.randn_like(a), -1., 1.)
+                a = torch.clamp(self.policy(b, s_post).cpu() + self.action_noise * torch.randn_like(a), -1., 1.)
 
                 o_, r, done = self.env.step(a.view(self.env.action_size).numpy())
 
@@ -53,6 +58,8 @@ class Trainer:
                 o = torch.tensor(o_, dtype=torch.float32)
                 if done:
                     break
+        if cfg.action_noise_schedule != 0:
+            self._linearly_ramping_an()
         metrics['steps'].append(t if len(metrics['steps']) == 0 else t + metrics['steps'][-1])
         metrics['episodes'].append(epoch)
         metrics['rewards'].append(r_tot)
@@ -60,6 +67,7 @@ class Trainer:
     def test_interval(self, metrics: dict, save_loc: str, epoch: int):
         self.wm.eval()
         self.planner.eval()
+        self.policy.eval()
         frames = []
         with torch.no_grad():
             o, r_tot = torch.tensor(self.env.reset(), dtype=torch.float32), 0
@@ -123,24 +131,59 @@ class Trainer:
 
     def _train_policy(self, metrics: dict, D: ExperienceReplay, epoch: int, global_prior, free_nats):
         losses = []
-        for _ in tqdm(range(cfg.collect_interval_plcy), desc=poem(f"{epoch} Policy Interval"), leave=False):
-            O, A, _, M = D.sample(cfg.minib_size)
+        policy_ = deepcopy(self.policy.module)
+        optimizer = optim.Adam(policy_.parameters(), lr=cfg.learning_rate, eps=cfg.adam_epsilon)
+        O, A, _, _ = D.get_last()
+        B, S_pos = torch.zeros(O.size(1) + 1, cfg.belief_size), torch.zeros(O.size(1) + 1, cfg.state_size)
+        with torch.no_grad():
+            a_0 = torch.zeros(1, 1, A.size(2))
+            b_0 = torch.zeros(1, cfg.belief_size).cuda()
+            s_0 = torch.zeros(1, cfg.state_size).cuda()
+            B, _, _, _, S_pos, _, _ = self.wm.t_model(s_0, torch.cat((a_0, A), dim=1)[:, :-1, :], b_0,
+                                                      self.wm.e_model(O))
+            B = torch.cat((b_0.unsqueeze(0), B), 1).squeeze(0)
+            S_pos = torch.cat((s_0.unsqueeze(0), S_pos), 1).squeeze(0)
+
+            A_tgt = torch.zeros(B.size(0), A.size(-1))
+            for ii in tqdm(list(chunks(list(range(A_tgt.size(0))), cfg.batch_size)),
+                           desc=poem(f"{epoch} Query Expert"), leave=False):
+                A_tgt[ii] = self.planner(B[ii], S_pos[ii])
+        A_tgt = A_tgt.cuda()
+
+        for _ in tqdm(range(cfg.collect_interval_plcy), desc=poem(f"{epoch} Policy Train"), leave=False):
+            ii = random.sample(range(A_tgt.size(0)), cfg.batch_size)
+            A_pred = policy_(B[ii], S_pos[ii])
+            loss = F.mse_loss(A_pred, A_tgt[ii], reduction='mean')
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            losses.append(loss.item())
+
+        metrics['im_loss'].append(mean(losses))
+
+        soft_update(self.policy.module, policy_, cfg.linear_policy_update)
+
+
+    def _train_policy_(self, metrics: dict, D: ExperienceReplay, epoch: int, global_prior, free_nats):
+        losses = []
+        O, A, _, M = D.get_all()
+        B, S_pos = torch.zeros(O.size(0), 1, cfg.belief_size), torch.zeros(O.size(0), 1, cfg.state_size)
+        with torch.no_grad():
+            for ii in tqdm(range(1, B.size(0)), desc=poem(f"{epoch} Expert Belief State"), leave=False):
+                if M[ii]:
+                    B[ii], _, _, _, S_pos[ii], _, _ = self.wm.t_model(S_pos[ii - 1], A[ii - 1].unsqueeze(1), B[ii - 1],
+                                                                      self.wm.e_model(O[ii]).unsqueeze(0))
+        B, S_pos = B.squeeze(1), S_pos.squeeze(1)
+        idxs = chunks(sorted(list(range(B.size(0))), key=lambda x: random.random()), cfg.batch_size)
+        for II in tqdm(idxs, desc=poem(f"{epoch} Policy Train"), leave=False):
             with torch.no_grad():
-                b_0 = torch.zeros(cfg.minib_size, cfg.belief_size)
-                s_0 = torch.zeros(cfg.minib_size, cfg.state_size)
-
-                B, _, _, _, S_pos, _, _ = self.wm.t_model(s_0, A[:, :-1], b_0, bottle(self.wm.e_model, (O[:, 1:],)),
-                                                          M[:, :-1])
-
-                A_tgt = bottle(self.planner, (B, S_pos))
-
-            A = bottle(self.policy, (B, S_pos))
-            loss = (F.mse_loss(A, A_tgt.cuda(), reduction='none') * M[:, 1:, :].cuda()).mean()
-
+                A_tgt = self.planner(B[II], S_pos[II])
+            A_pred = self.policy(B[II], S_pos[II])
+            loss = (F.mse_loss(A_pred, A_tgt.cuda(), reduction='mean'))
             self.plcy_optimizer.zero_grad()
             loss.backward()
             self.plcy_optimizer.step()
-
             losses.append(loss.item())
 
         metrics['im_loss'].append(mean(losses))
@@ -222,6 +265,9 @@ class Trainer:
         aa = time.time() - t0
 
         return loss
+
+    def _linearly_ramping_an(self):
+        self.action_noise = max(self.action_noise - cfg.action_noise_schedule, cfg.action_noise)
 
     def _linearly_ramping_lr(self, optimizer: Optimizer):
         for group in optimizer.param_groups:

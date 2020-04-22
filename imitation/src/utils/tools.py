@@ -72,3 +72,21 @@ def _tqdm_write(*args):
         for ii, string in enumerate(arg.split('\n')):
             tqdm.write((' ' * 17 if ii > 0 else '') + string, end=' ' if ii == len(arg.split('\n')) - 1 else '\n')
     tqdm.write('')
+
+
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+
+def soft_update(target, source, tau):
+    """
+    update parameters of target network with incremental step towards source network
+
+    Args:
+        target: torch.nn.Module - target network
+        source: torch.nn.Module - source network
+        tau:    float - step size
+    """
+    for target_param, param in zip(target.parameters(), source.parameters()):
+        target_param.data.copy_(target_param.data * (1. - tau) + param.data * tau)

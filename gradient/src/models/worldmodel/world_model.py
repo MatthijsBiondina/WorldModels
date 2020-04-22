@@ -1,3 +1,4 @@
+import os
 from typing import Optional, Tuple
 
 import torch
@@ -193,10 +194,25 @@ class WorldModel:
         self.r_model = nn.DataParallel(RewardModel().cuda(), device_ids=devices)
 
         # Initialization
-        self.t_model.apply(init_weights)
-        self.d_model.apply(init_weights)
-        self.r_model.apply(init_weights)
-        self.e_model.apply(init_weights)
+        if cfg.models is '':
+            self.t_model.apply(init_weights)
+            self.d_model.apply(init_weights)
+            self.r_model.apply(init_weights)
+            self.e_model.apply(init_weights)
+        else:
+            self.t_model.load_state_dict(torch.load(os.path.join(cfg.models, 't_model.pth')))
+            self.d_model.load_state_dict(torch.load(os.path.join(cfg.models, 'd_model.pth')))
+            self.r_model.load_state_dict(torch.load(os.path.join(cfg.models, 'r_model.pth')))
+            self.e_model.load_state_dict(torch.load(os.path.join(cfg.models, 'e_model.pth')))
+
+
+    def save_state_dicts(self, save_loc):
+        pth = os.path.join(save_loc, 'model')
+        os.makedirs(pth, exist_ok=True)
+        torch.save(self.t_model.state_dict(), os.path.join(pth, 't_model.pth'))
+        torch.save(self.d_model.state_dict(), os.path.join(pth, 'd_model.pth'))
+        torch.save(self.r_model.state_dict(), os.path.join(pth, 'r_model.pth'))
+        torch.save(self.e_model.state_dict(), os.path.join(pth, 'e_model.pth'))
 
     def train(self):
         self.t_model.train()

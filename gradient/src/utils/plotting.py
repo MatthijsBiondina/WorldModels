@@ -15,8 +15,15 @@ def save_metrics(metrics: dict, save_loc: str):
     s_top = figure(width=720, height=360, title="Performance", x_axis_label='episodes', y_axis_label='reward')
     s_top.line(not_none(metrics['episodes'], metrics['rewards']), not_none(metrics['rewards']),
                legend_label="With Action Noise", line_color="orchid", line_width=3, line_alpha=0.75)
+    try:
+        s_top.varea(not_none(metrics['episodes'], metrics['t_quartz']),
+                    list(map(list, zip(*not_none(metrics['t_quartz']))))[0],
+                    list(map(list, zip(*not_none(metrics['t_quartz']))))[1],
+                    fill_alpha=0.25, fill_color="royalblue")
+    except IndexError:
+        pass
     s_top.line(not_none(metrics['episodes'], metrics['t_scores']), not_none(metrics['t_scores']),
-               legend_label="Without Action Noise", line_color="royalblue", line_width=3, line_alpha=0.75)
+               legend_label="Mean reward", line_color="royalblue", line_width=3, line_alpha=0.75)
     s_top.legend.location = "bottom_right"
 
     s_bot = figure(width=720, height=360, x_range=s_top.x_range, title="Loss Scores",

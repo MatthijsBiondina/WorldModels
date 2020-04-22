@@ -71,6 +71,22 @@ class ExperienceReplay:
             self._save()
         return self._retrieve_batch(np.array([self._sample_idx() for _ in range(batch_size)]), batch_size)
 
+    def get_all(self):
+        if self.full:
+            idxs = list(range(self.position, cfg.experience_size)) + list(range(0, self.position))
+        else:
+            idxs = list(range(0, self.position))
+        return (torch.tensor(self.O[idxs]).unsqueeze(1), torch.tensor(self.A[idxs]).unsqueeze(1),
+                torch.tensor(self.R[idxs]), torch.tensor(self.M[idxs]))
+
+    def get_last(self):
+        idxs, ii = [], self.position - 1
+        while self.M[(ii - 1) % cfg.experience_size]:
+            idxs.append(ii - 1)
+            ii = (ii - 1) % cfg.experience_size
+        return (torch.tensor(self.O[idxs]).unsqueeze(0), torch.tensor(self.A[idxs]).unsqueeze(0),
+                torch.tensor(self.R[idxs]), torch.tensor(self.M[idxs]))
+
     @property
     def len(self):
         """

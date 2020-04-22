@@ -7,10 +7,11 @@ import src.utils.config as cfg
 
 
 def save_metrics(metrics: dict, save_loc: str):
+    # test
     with open(os.path.join(save_loc, 'metrics.json'), 'w+') as f:
         json.dump(metrics, f, indent=2)
 
-    output_file("./res/plt.html")
+    output_file(os.path.join(save_loc, 'plt.html'), title=save_loc.split('/')[-1])
 
     s_top = figure(width=720, height=360, title="Performance", x_axis_label='episodes', y_axis_label='reward')
     s_top.line(not_none(metrics['episodes'], metrics['rewards']), not_none(metrics['rewards']),
@@ -28,8 +29,8 @@ def save_metrics(metrics: dict, save_loc: str):
                legend_label="Reward Loss (MSE)", line_color="royalblue", line_width=3)
     s_bot.line(not_none(metrics['episodes'], metrics['kl_loss']), not_none(metrics['kl_loss']),
                legend_label="Complexity Loss (KL-divergence)", line_color="sienna", line_width=3)
-    s_bot.line(not_none(metrics['episodes'], metrics['p_loss']),
-               list(map(lambda x: x / cfg.action_repeat, not_none(metrics['p_loss']))),
+    s_bot.line(not_none(metrics['episodes'], metrics['im_loss']),
+               list(map(lambda x: x / cfg.action_repeat, not_none(metrics['im_loss']))),
                legend_label="Policy Loss (MSE)", line_color="seagreen", line_width=3)
 
     p = gridplot([[s_top], [s_bot]])

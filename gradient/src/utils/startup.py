@@ -37,13 +37,13 @@ def init_logging():
     except FileNotFoundError:
         pass
     save_loc = os.path.join('res/results', '__'.join((cfg.id, str(ii).zfill(2),
-                            datetime.now().strftime("%Y_%m_%d__%H_%M_%S"))))
+                                                      datetime.now().strftime("%Y_%m_%d__%H_%M_%S"))))
     if os.path.exists(save_loc):
         shutil.rmtree(save_loc)
     os.makedirs(save_loc)
     with open(os.path.join(save_loc, 'hyperparameters.txt'), 'w+') as f:
         f.write(cfg.hyperparameters())
-    metrics = {'steps': [], 'episodes': [], 'rewards': [], 't_scores': [],
+    metrics = {'steps': [], 'episodes': [], 'rewards': [], 't_scores': [], 't_quartz': [],
                'o_loss': [], 'r_loss': [], 'kl_loss': [], 'p_loss': []}
     logger = logging.getLogger('planet')
     logger.setLevel(logging.DEBUG)
@@ -78,12 +78,17 @@ def init_seed_episodes(D: ExperienceReplay, trainer: Trainer, metrics: dict):
     epoch = 0
     while epoch < cfg.seed_episodes or D.len < cfg.batch_size:
         trainer.collect_interval(metrics, D, epoch)
-        metrics['o_loss'].append(None)
-        metrics['r_loss'].append(None)
-        metrics['kl_loss'].append(None)
-        metrics['p_loss'].append(None)
-        metrics['t_scores'].append(None)
         epoch += 1
+    for key in metrics:
+        while len(metrics[key]) < len(metrics['episodes']):
+            metrics[key].append(None)
+
+    # metrics['o_loss'].append(None)
+    # metrics['r_loss'].append(None)
+    # metrics['kl_loss'].append(None)
+    # metrics['p_loss'].append(None)
+    # metrics['t_scores'].append(None)
+    # epoch += 1
     return epoch
 
 

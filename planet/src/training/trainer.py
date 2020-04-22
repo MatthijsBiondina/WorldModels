@@ -39,7 +39,7 @@ class Trainer:
                                                            self.wm.e_model(o.unsqueeze(dim=0)).unsqueeze(dim=0))
                 b, s_post = b.squeeze(dim=1), s_post.squeeze(dim=1)  # remove time dimension
 
-                a = self.planner(b, s_post) + self.action_noise * torch.randn_like(a)
+                a = torch.clamp(self.planner(b, s_post) + self.action_noise * torch.randn_like(a), -1., 1.)
 
                 o_, r, done = self.env.step(a.view(self.env.action_size).numpy())
 
@@ -70,12 +70,12 @@ class Trainer:
                                                            self.wm.e_model(o.unsqueeze(dim=0)).unsqueeze(dim=0))
                 b, s_post = b.squeeze(dim=1), s_post.squeeze(dim=1)
 
-                a = self.planner(b, s_post)
+                a = torch.clamp(self.planner(b, s_post), -1., 1.)
 
-                o, r, done = self.env.step(a.view(self.env.action_size).numpy())
+                o_, r, done = self.env.step(a.view(self.env.action_size).numpy())
                 frames.append(self.env.render())
                 r_tot += r
-                o = torch.tensor(o, dtype=torch.float32)
+                o = torch.tensor(o_, dtype=torch.float32)
                 if done:
                     break
         metrics['t_scores'].append(r_tot)

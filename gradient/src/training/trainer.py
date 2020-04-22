@@ -1,7 +1,7 @@
 import time
 from math import ceil
 from statistics import mean
-
+import numpy as np
 import torch
 from torch import nn, optim
 import torch.nn.functional as F
@@ -66,33 +66,36 @@ class Trainer:
         metrics['steps'].append(t if len(metrics['steps']) == 0 else t + metrics['steps'][-1])
         metrics['episodes'].append(epoch)
         metrics['rewards'].append(r_tot)
-        if epoch % 5 == 0:
-            make_video(frames, save_loc, epoch, subscrpt='c')
+        # if epoch % 5 == 0:
+        #     make_video(frames, save_loc, epoch, subscrpt='c')
 
     def test_interval(self, metrics: dict, save_loc: str, epoch: int):
         self.wm.eval()
         self.policy.eval()
-        frames = []
-        with torch.no_grad():
-            o, r_tot = torch.tensor(self.env.reset(), dtype=torch.float32), 0
-            frames.append(self.env.render())
-            b, s_post = torch.zeros(1, cfg.belief_size), torch.zeros(1, cfg.state_size)
-            a = torch.zeros(1, self.env.action_size)
-            for t in tqdm(range(ceil(cfg.max_episode_length / cfg.action_repeat)),
-                          desc=poem(f"{epoch} Test Run"), leave=False):
-                b, _, _, _, s_post, _, _ = self.wm.t_model(s_post, a.unsqueeze(dim=1), b,
-                                                           self.wm.e_model(o.unsqueeze(dim=0)).unsqueeze(dim=0))
-                b, s_post = b.squeeze(dim=1), s_post.squeeze(dim=1)
-
-                a = torch.clamp(self.policy(b, s_post), -1., 1.).cpu()
-
-                o_, r, done = self.env.step(a.view(self.env.action_size).numpy())
+        scores, frames = [], []
+        for run in range(cfg.test_episodes):
+            with torch.no_grad():
+                o, r_tot = torch.tensor(self.env.reset(), dtype=torch.float32), 0
                 frames.append(self.env.render())
-                r_tot += r
-                o = torch.tensor(o_, dtype=torch.float32)
-                if done:
-                    break
-        metrics['t_scores'].append(r_tot)
+                b, s_post = torch.zeros(1, cfg.belief_size), torch.zeros(1, cfg.state_size)
+                a = torch.zeros(1, self.env.action_size)
+                for t in tqdm(range(ceil(cfg.max_episode_length / cfg.action_repeat)),
+                              desc=poem(f"{epoch} Test Run ({run + 1})"), leave=False):
+                    b, _, _, _, s_post, _, _ = self.wm.t_model(s_post, a.unsqueeze(dim=1), b,
+                                                               self.wm.e_model(o.unsqueeze(dim=0)).unsqueeze(dim=0))
+                    b, s_post = b.squeeze(dim=1), s_post.squeeze(dim=1)
+
+                    a = torch.clamp(self.policy(b, s_post), -1., 1.).cpu()
+
+                    o_, r, done = self.env.step(a.view(self.env.action_size).numpy())
+                    frames.append(self.env.render())
+                    r_tot += r
+                    o = torch.tensor(o_, dtype=torch.float32)
+                    if done:
+                        break
+            scores.append(r_tot)
+        metrics['t_scores'].append(mean(scores))
+        metrics['t_quartz'].append(np.percentile(scores, [25, 75], interpolation='midpoint').tolist())
         make_video(frames, save_loc, epoch)
 
     def train_interval(self, metrics: dict, D: ExperienceReplay, epoch: int, global_prior, free_nats):
@@ -165,6 +168,7 @@ class Trainer:
 
             self.plcy_optimizer.zero_grad()
             loss.backward()
+            nn.utils.clip_grad_norm_(self.policy.parameters(), cfg.grad_clip_norm, norm_type=2)
             self.plcy_optimizer.step()  # S
 
             losses.append(loss.item())

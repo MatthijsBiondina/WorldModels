@@ -12,7 +12,7 @@ import src.utils.config as cfg
 
 
 mem_load = None # './res/memory'
-os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 ###
 
 init_printoptions()
@@ -31,20 +31,14 @@ global_prior, free_nats = init_hyperparameters()
 
 while epoch < cfg.episodes:
     trainer.train_interval(metrics, D, epoch, global_prior, free_nats)
-    if epoch % 5 == 0:
+    if epoch % 25 == 0:
         trainer.test_interval(metrics, save_loc, epoch)
     else:
         metrics['t_scores'].append(None)
     trainer.collect_interval(metrics, D, epoch)
     save_metrics(metrics, save_loc)
+    worldmodel.save_state_dicts(save_loc)
     epoch += 1
 
-# D = init_memory()
-#
-# for ii in range(10):
-#     D.push(torch.tensor([ii, ii+0.1, ii+0.2, ii+0.3]), torch.tensor([ii]), ii, ii == 5)
-#
-#
-# O, A, R, M = D.sample()
 
 print("bye " * 2)
