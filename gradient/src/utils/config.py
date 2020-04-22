@@ -53,4 +53,4 @@ def hyperparameters():
     mname = traceback.extract_stack(None, 1)[0].name
     keys = [key for key in globals().keys() if '__' not in key and key is not mname and
             key is not 'traceback' and key is not 'np' and key is not 'random']
-    return '\n'.join([f'{key} := {eval(key)}' for key in keys])
+    return '\n'.join(['{} := {}'.format(key,eval(key)) for key in keys])
