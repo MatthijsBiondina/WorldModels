@@ -57,3 +57,18 @@ def _tqdm_write(*args):
         for ii, string in enumerate(arg.split('\n')):
             tqdm.write((' ' * 17 if ii > 0 else '') + string, end=' ' if ii == len(arg.split('\n')) - 1 else '\n')
     tqdm.write('')
+
+
+def listdir(path, end=None):
+    return sorted([os.path.join(path, f) for f in os.listdir(path) if (True if end is None else f.endswith(end))])
+
+
+def hash_append(dictionary, index, value):
+    try:
+        dictionary[index].append(value)
+    except KeyError:
+        dictionary[index] = [value]
+
+
+def clip(val, min_, max_):
+    return min(max_, max(min_, val))

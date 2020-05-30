@@ -52,3 +52,4 @@ def not_none(vlist, klist=None):
         return [x for x in vlist if x is not None]
     else:
         return [x for x, k in zip(vlist, klist) if k is not None]
+

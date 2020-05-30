@@ -1,4 +1,6 @@
 import logging
+
+import json
 import os
 import random
 import shutil
@@ -29,7 +31,7 @@ def init_seeds():
     torch.manual_seed(cfg.seed)
 
 
-def init_logging():
+def init_logging(path=None):
     ii = 0
     try:
         while ii in [int(x.split('__')[1]) for x in os.listdir('res/results')]:
@@ -43,8 +45,12 @@ def init_logging():
     os.makedirs(save_loc)
     with open(os.path.join(save_loc, 'hyperparameters.txt'), 'w+') as f:
         f.write(cfg.hyperparameters())
-    metrics = {'steps': [], 'episodes': [], 'rewards': [], 't_scores': [], 't_quartz': [],
-               'o_loss': [], 'r_loss': [], 'kl_loss': [], 'p_loss': []}
+    if path is None:
+        metrics = {'steps': [], 'episodes': [], 'rewards': [], 't_scores': [], 't_quartz': [],
+                   'o_loss': [], 'r_loss': [], 'kl_loss': [], 'p_loss': []}
+    else:
+        with open(path, 'r') as f:
+            metrics = json.load(f)
     logger = logging.getLogger('planet')
     logger.setLevel(logging.DEBUG)
     fh = logging.FileHandler(os.path.join(save_loc, 'planet.log'))

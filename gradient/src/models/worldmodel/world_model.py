@@ -200,11 +200,10 @@ class WorldModel:
             self.r_model.apply(init_weights)
             self.e_model.apply(init_weights)
         else:
-            self.t_model.load_state_dict(torch.load(os.path.join(cfg.models, 't_model.pth')))
-            self.d_model.load_state_dict(torch.load(os.path.join(cfg.models, 'd_model.pth')))
-            self.r_model.load_state_dict(torch.load(os.path.join(cfg.models, 'r_model.pth')))
-            self.e_model.load_state_dict(torch.load(os.path.join(cfg.models, 'e_model.pth')))
-
+            self.t_model.load_state_dict(torch.load(os.path.join(cfg.models, 'model/t_model.pth')))
+            self.d_model.load_state_dict(torch.load(os.path.join(cfg.models, 'model/d_model.pth')))
+            self.r_model.load_state_dict(torch.load(os.path.join(cfg.models, 'model/r_model.pth')))
+            self.e_model.load_state_dict(torch.load(os.path.join(cfg.models, 'model/e_model.pth')))
 
     def save_state_dicts(self, save_loc):
         pth = os.path.join(save_loc, 'model')
